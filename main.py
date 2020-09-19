@@ -1,11 +1,11 @@
 
 from flask import Flask, render_template
+import sys
 import speech_recognition as sr
 import pyttsx3
 from words import words
 minionese_to_english = {v: k for k, v in words.items()}
 app = Flask(__name__)
-
 r = sr.Recognizer()
 
 
@@ -14,7 +14,6 @@ def home():
     return render_template('index.html')
 
 
-@app.route('/trans')
 def translator(command):
     engine = pyttsx3.init()
     engine.setProperty('rate', 145)
@@ -23,15 +22,18 @@ def translator(command):
     engine.runAndWait()
 
 
-@app.route('/home')
-def meaning():
-    while (1):
+@app.route('/home/<voice>')
+def meaning(voice, key='minion'):
+
+    while (voice):
         try:
             with sr.Microphone() as source2:
                 r.adjust_for_ambient_noise(source2, duration=0.2)
                 audio2 = r.listen(source2)
                 mytext = r.recognize_google(audio2)
                 mytext = mytext.lower()
+                if key==mytext:
+                    break
                 print(mytext)
                 mytext=translate(mytext, False)
                 print(mytext)
@@ -40,6 +42,7 @@ def meaning():
             print("Could not request results; {0}".format(e))
         except sr.UnknownValueError:
             print("unknown error occured")
+    return render_template('index2.html')
 
 
 def translate(sentence, minionese=False):
@@ -52,6 +55,11 @@ def translate(sentence, minionese=False):
             result += word + " "
 
     return result[:-1]
+
+@app.route('/end')
+def voiceend():
+    voice=False
+    sys.exit(0)
 
 
 if __name__ == '__main__':
